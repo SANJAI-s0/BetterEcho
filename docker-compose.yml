@@ -1,0 +1,20 @@
+# BetterEcho — Docker Compose (Local Development)
+# Usage: docker compose up --build
+
+services:
+  betterecho:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        WHISPER_MODEL: small   # Use 'small' locally for better accuracy
+    ports:
+      - "5000:5000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - WHISPER_MODEL=small
+      - FLASK_ENV=development
+    volumes:
+      # Hot-reload frontend changes without rebuilding
+      - ./frontend:/app/frontend:ro
+    restart: unless-stopped

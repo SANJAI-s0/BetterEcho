@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+
+# Environment secrets
+.env
+*.env
+
+# Whisper model weights (large binary files, baked into Docker image)
+*.pt
+*.bin
+
+# Temp audio files
+*.webm
+*.wav
+*.tmp
+
+# Dev artifacts
+.DS_Store
+Thumbs.db

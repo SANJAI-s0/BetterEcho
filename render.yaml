@@ -1,0 +1,36 @@
+# BetterEcho — Render.com Deployment Configuration
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: betterecho-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # ── Render Plan ──────────────────────────────────────────────────────────
+    # Free:    512MB RAM  → WHISPER_MODEL=base  ✅
+    # Starter: 512MB RAM  → WHISPER_MODEL=base  ✅
+    # Standard:2GB  RAM  → WHISPER_MODEL=small  ✅
+    plan: free
+
+    # ── Health Check ──────────────────────────────────────────────────────────
+    healthCheckPath: /
+
+    # ── Auto Deploy on Git Push ───────────────────────────────────────────────
+    autoDeploy: true
+
+    # ── Build Arguments ───────────────────────────────────────────────────────
+    buildArgs:
+      - WHISPER_MODEL=base    # Use 'base' on free tier to stay within 512MB
+
+    # ── Environment Variables ─────────────────────────────────────────────────
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false           # ⚠️  Set this manually in Render Dashboard
+
+      - key: WHISPER_MODEL
+        value: base           # Matches the build ARG above
+
+      - key: FLASK_ENV
+        value: production

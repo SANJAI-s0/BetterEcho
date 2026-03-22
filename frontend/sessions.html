@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetterEcho — My Sessions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="sessions-layout">
+    <div class="page-header">
+        <div>
+            <span class="tag tag-cyan" style="margin-bottom:0.75rem;"><i class="fas fa-clock-rotate-left"></i> History</span>
+            <h2>My Sessions</h2>
+        </div>
+        <a href="/app" class="btn btn-primary"><i class="fas fa-plus"></i> New Session</a>
+    </div>
+
+    <input type="text" class="search-bar" id="search" placeholder="Search sessions by title...">
+
+    <div class="session-list" id="session-list"></div>
+
+    <div class="empty-state" id="empty-state" style="display:none;">
+        <i class="fas fa-box-open"></i>
+        <h3 style="margin-bottom:0.5rem;color:var(--text);">No sessions yet</h3>
+        <p>Record a lecture and save it to see it here.</p>
+        <a href="/app" class="btn btn-ghost" style="margin:1.5rem auto 0;">
+            <i class="fas fa-microphone"></i> Start Recording
+        </a>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modal-title">Session Preview</h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/nav.js"></script>
+<script>
+    injectNav('sessions');
+
+    // Page entrance
+    gsap.from('.page-header', { y: -20, opacity: 0, duration: 0.7, ease: 'power3.out', delay: 0.2 });
+    gsap.from('.search-bar', { y: -10, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.35 });
+
+    function getSessions() {
+        return JSON.parse(localStorage.getItem('betterecho_sessions') || '[]');
+    }
+
+    function formatDate(iso) {
+        return new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function openModal(session) {
+        document.getElementById('modal-title').textContent = session.title;
+        document.getElementById('modal-body').innerHTML = `
+            <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:1.5rem;">${formatDate(session.date)}</p>
+            <div style="margin-bottom:1.5rem;">
+                <h4 style="color:var(--cyan);margin-bottom:0.75rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:1px;">Transcript</h4>
+                <p style="line-height:1.8;">${session.transcript || 'No transcript saved.'}</p>
+            </div>
+            ${session.analysis ? `
+            <div>
+                <h4 style="color:var(--cyan);margin-bottom:0.75rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:1px;">AI Analysis</h4>
+                <div class="analysis-content">${formatAnalysis(session.analysis)}</div>
+            </div>` : ''}
+        `;
+        document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('open');
+    }
+
+    function formatAnalysis(text) {
+        return text
+            .replace(/^## (.*$)/gim, '<h2 style="color:var(--cyan);margin:1rem 0 0.5rem;">$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3 style="margin:0.75rem 0 0.35rem;">$1</h3>')
+            .replace(/^\- (.*$)/gim, '<li style="margin-left:1.5rem;margin-bottom:0.3rem;">$1</li>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function renderSessions(sessions) {
+        const list = document.getElementById('session-list');
+        const empty = document.getElementById('empty-state');
+        list.innerHTML = '';
+
+        if (sessions.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        sessions.forEach((s, i) => {
+            const el = document.createElement('div');
+            el.className = 'session-item glass-card';
+            el.innerHTML = `
+                <div onclick="openModal(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                    <div class="session-item-title">${s.title}</div>
+                    <div class="session-item-meta">
+                        <i class="fas fa-calendar"></i> ${formatDate(s.date)} &nbsp;&nbsp;
+                        <i class="fas fa-align-left"></i> ${(s.transcript || '').split(' ').length} words
+                        ${s.analysis ? '&nbsp;&nbsp;<span class="tag tag-success" style="font-size:0.7rem;padding:3px 8px;"><i class="fas fa-check"></i> Analyzed</span>' : ''}
+                    </div>
+                </div>
+                <div class="session-item-actions">
+                    <button class="icon-btn" title="Delete" onclick="deleteSession(${i});event.stopPropagation();">
+                        <i class="fas fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+            list.appendChild(el);
+            gsap.to(el, { opacity: 1, x: 0, duration: 0.5, delay: i * 0.07, ease: 'power2.out' });
+        });
+    }
+
+    function deleteSession(index) {
+        if (!confirm('Delete this session?')) return;
+        const sessions = getSessions();
+        sessions.splice(index, 1);
+        localStorage.setItem('betterecho_sessions', JSON.stringify(sessions));
+        renderSessions(filterSessions(document.getElementById('search').value));
+    }
+
+    function filterSessions(query) {
+        const q = query.toLowerCase();
+        return getSessions().filter(s => s.title.toLowerCase().includes(q));
+    }
+
+    document.getElementById('search').addEventListener('input', e => {
+        renderSessions(filterSessions(e.target.value));
+    });
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+
+    // Initial render
+    renderSessions(getSessions());
+</script>
+</body>
+</html>

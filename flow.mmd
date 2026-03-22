@@ -1,0 +1,89 @@
+flowchart TD
+    A([👤 User opens BetterEcho]) --> B[Landing Page - /]
+
+    B --> C{Action}
+    C -->|Click 'Start Recording'| D[Recorder Page - /app]
+    C -->|Click 'View Sessions'| E[Sessions Page - /sessions]
+
+    %% ── RECORDER FLOW ──────────────────────────────────────────
+    D --> F[Page loads with GSAP entrance animation]
+    F --> G{User clicks Record Button}
+
+    G -->|First click| H[Browser requests microphone permission]
+    H -->|Granted| I[MediaRecorder API starts capturing audio]
+    H -->|Denied| Z1([⚠️ Alert: Microphone access needed])
+
+    I --> J[Web Audio API - Real-time Frequency Visualizer]
+    J --> K[Recording in progress - timer counts up]
+
+    K --> L{User clicks Stop Button}
+    L --> M[Audio chunks merged into .webm Blob]
+
+    %% ── BACKEND STT PIPELINE ────────────────────────────────────
+    M --> N[POST /transcribe - Audio blob sent to Flask]
+
+    subgraph PIPELINE [" 🔬 4-Layer Accuracy Pipeline "]
+        direction TB
+        P1[Layer 1 - pydub\nConvert webm → 16kHz mono WAV\nWhisper native format]
+        P2[Layer 2 - noisereduce\nRemove 80% background noise\nAC hum · echo · crowd noise]
+        P3[Layer 3 - OpenAI Whisper small\nlanguage=en · beam_size=5\nIndian English initial_prompt\ntemperature=0]
+        P4[Layer 4 - Google Gemini 1.5 Flash\nCorrect Indian proper nouns\nFix city & name mishearings]
+
+        P1 --> P2 --> P3 --> P4
+    end
+
+    N --> PIPELINE
+    P4 --> O[Corrected Transcript returned as JSON]
+
+    %% ── TRANSCRIPT DISPLAY ──────────────────────────────────────
+    O --> Q[Display corrected transcript in UI]
+    Q --> R[Collapsible 'Raw Whisper output' for comparison]
+
+    %% ── ANALYSIS FLOW ───────────────────────────────────────────
+    R --> S{User clicks Run AI Analysis}
+    S --> T[POST /analyze - Transcript sent to Flask]
+
+    T --> U[Google Gemini 1.5 Flash - Semantic Analysis]
+
+    subgraph ANALYSIS [" 🧠 Semantic Output "]
+        direction LR
+        A1[📋 Executive Summary]
+        A2[🏛️ Key Pillars - Top 5 Topics]
+        A3[📖 Definitions & Concepts]
+        A4[💡 Study Questions]
+        A5[🔗 Further Reading]
+    end
+
+    U --> ANALYSIS
+    ANALYSIS --> V[Display AI Analysis in workspace panel]
+
+    %% ── SESSION SAVE ────────────────────────────────────────────
+    V --> W{User clicks Save Session}
+    Q --> W
+    W --> X[Save to localStorage\nTitle · Date · Transcript · Analysis]
+    X --> Y[Status pill: Session Saved ✅]
+
+    %% ── SESSIONS PAGE ───────────────────────────────────────────
+    E --> E1[Render sessions from localStorage]
+    E1 --> E2{User interaction}
+    E2 -->|Type in search bar| E3[Filter sessions by title]
+    E2 -->|Click session card| E4[Open modal preview\nTranscript + Analysis]
+    E2 -->|Click delete icon| E5[Remove from localStorage]
+    E4 --> E6{User action}
+    E6 -->|Close modal| E1
+
+    %% ── RENDER DEPLOY FLOW ──────────────────────────────────────
+    subgraph CICD [" 🔄 CI/CD on git push to main "]
+        direction LR
+        CI1[GitHub Actions triggered]
+        CI2[Stage 1 - flake8 lint]
+        CI3[Stage 2 - Docker build test\nWhisper tiny for speed]
+        CI4[Stage 3 - Trigger Render deploy hook]
+        CI1 --> CI2 --> CI3 --> CI4
+    end
+
+    %% ── STYLING ─────────────────────────────────────────────────
+    style PIPELINE fill:#0f172a,stroke:#06b6d4,color:#f1f5f9
+    style ANALYSIS  fill:#0f172a,stroke:#6366f1,color:#f1f5f9
+    style CICD      fill:#0f172a,stroke:#10b981,color:#f1f5f9
+    style Z1        fill:#f43f5e,color:white

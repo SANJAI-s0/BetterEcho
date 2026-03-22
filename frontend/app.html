@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetterEcho — Recorder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-layout" id="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-title">Live Capture</div>
+
+        <!-- Audio Visualizer -->
+        <div class="visualizer-wrapper">
+            <canvas id="visualizer"></canvas>
+        </div>
+
+        <!-- Timer -->
+        <div class="rec-timer" id="rec-timer">0:00</div>
+
+        <!-- Record Button -->
+        <div class="record-btn-wrap">
+            <button class="btn-record" id="toggle-record">
+                <i class="fas fa-microphone" id="record-icon"></i>
+            </button>
+        </div>
+
+        <!-- Status -->
+        <div class="status-pill" id="status-pill">
+            <i class="fas fa-circle-dot" style="margin-right:6px;font-size:0.7rem;"></i>
+            Ready to Record
+        </div>
+
+        <!-- Session Title -->
+        <div>
+            <div class="sidebar-title" style="margin-bottom:0.5rem;">Session Name</div>
+            <input type="text" class="session-title-input" id="session-title"
+                placeholder="My Lecture Title..." value="">
+        </div>
+
+        <!-- Tags -->
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <span class="tag tag-cyan"><i class="fas fa-microchip"></i> Whisper</span>
+            <span class="tag tag-success"><i class="fas fa-brain"></i> Gemini</span>
+        </div>
+    </aside>
+
+    <!-- WORKSPACE -->
+    <section class="workspace" id="workspace">
+        <!-- Tabs -->
+        <div class="workspace-tabs">
+            <button class="workspace-tab active" data-panel="transcript-panel">
+                <i class="fas fa-file-lines" style="margin-right:6px;"></i>Transcript
+            </button>
+            <button class="workspace-tab" data-panel="analysis-panel">
+                <i class="fas fa-brain" style="margin-right:6px;"></i>AI Analysis
+            </button>
+        </div>
+
+        <!-- Transcript Panel -->
+        <div class="workspace-panel active" id="transcript-panel">
+            <div class="text-output" id="transcript-output">
+                <div class="placeholder-msg">
+                    <i class="fas fa-microphone-lines"></i>
+                    Press the record button to begin capturing your lecture.<br>
+                    BetterEcho will transcribe it when you stop.
+                </div>
+            </div>
+            <div class="panel-actions">
+                <button class="btn btn-ghost" id="copy-btn"><i class="fas fa-copy"></i> Copy Text</button>
+                <button class="btn btn-ghost" id="save-session-btn" disabled><i class="fas fa-floppy-disk"></i> Save Session</button>
+            </div>
+        </div>
+
+        <!-- Analysis Panel -->
+        <div class="workspace-panel" id="analysis-panel">
+            <div class="text-output" id="analysis-output">
+                <div class="placeholder-msg">
+                    <i class="fas fa-robot"></i>
+                    Record a lecture first, then click "Run AI Analysis"<br>
+                    to get summaries, key pillars, and study questions.
+                </div>
+            </div>
+            <div class="panel-actions">
+                <button class="btn btn-primary" id="analyze-btn" disabled>
+                    <i class="fas fa-wand-magic-sparkles"></i> Run AI Analysis
+                </button>
+                <button class="btn btn-ghost" id="copy-analysis-btn"><i class="fas fa-copy"></i> Copy Analysis</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/app.js"></script>
+<script>
+    injectNav('app');
+
+    // GSAP entrance
+    gsap.from('#sidebar', { x: -40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: 0.1 });
+    gsap.from('#workspace', { x: 40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: 0.2 });
+    gsap.from('.workspace-tab', { y: -15, opacity: 0, stagger: 0.1, duration: 0.5, ease: 'back.out(1.7)', delay: 0.4 });
+</script>
+</body>
+</html>

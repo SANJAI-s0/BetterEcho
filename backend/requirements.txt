@@ -1,0 +1,11 @@
+flask
+flask-cors
+openai-whisper
+google-generativeai
+pydub
+python-dotenv
+torch
+torchaudio
+noisereduce
+soundfile
+gunicorn
