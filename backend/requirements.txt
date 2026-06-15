@@ -1,11 +1,15 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 flask
 flask-cors
 openai-whisper
 google-generativeai
 pydub
 python-dotenv
-torch
-torchaudio
+
+torch==2.7.1+cpu
+torchaudio==2.7.1+cpu
+
 noisereduce
 soundfile
 gunicorn
