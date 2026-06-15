@@ -16,9 +16,9 @@ services:
     envVars:
       - key: GEMINI_API_KEY
         sync: false
-
+    
       - key: WHISPER_MODEL
         value: tiny
-
+    
       - key: FLASK_ENV
         value: production
