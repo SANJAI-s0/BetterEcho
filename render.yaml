@@ -1,5 +1,4 @@
 # BetterEcho — Render.com Deployment Configuration
-# Docs: https://render.com/docs/blueprint-spec
 
 services:
   - type: web
@@ -8,22 +7,18 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
 
-    # ── Render Plan ──────────────────────────────────────────────────────────
     plan: free
 
-    # ── Health Check ──────────────────────────────────────────────────────────
     healthCheckPath: /
 
-    # ── Auto Deploy on Git Push ───────────────────────────────────────────────
     autoDeploy: true
 
-    # ── Environment Variables ─────────────────────────────────────────────────
     envVars:
       - key: GEMINI_API_KEY
         sync: false
 
       - key: WHISPER_MODEL
-        value: base
+        value: tiny
 
       - key: FLASK_ENV
         value: production
