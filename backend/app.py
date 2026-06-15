@@ -60,13 +60,21 @@ Rules:
 Raw transcript:
 {transcript}"""
 
-# ── Load Whisper ───────────────────────────────────────────────────────────────
-WHISPER_MODEL = os.getenv("WHISPER_MODEL", "small")  # Override with 'base' on free cloud tiers
-print(f"\n🧠 [BetterEcho] Loading STT Engine (Whisper '{WHISPER_MODEL}')...")
-if WHISPER_MODEL == "small":
-    print("   ⏳ First run: downloads ~244MB model. Subsequent runs are instant.\n")
-stt_model = whisper.load_model(WHISPER_MODEL)
-print("✅ [BetterEcho] Engine ready!\n")
+# ── Lazy Load Whisper (Render Free Friendly) ──────────────────────────────────
+
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "tiny")
+
+stt_model = None
+
+def get_stt_model():
+    global stt_model
+
+    if stt_model is None:
+        print(f"\n🧠 [BetterEcho] Loading Whisper '{WHISPER_MODEL}'...")
+        stt_model = whisper.load_model(WHISPER_MODEL)
+        print("✅ [BetterEcho] Whisper ready!\n")
+
+    return stt_model
 
 # ── Audio Preprocessing ────────────────────────────────────────────────────────
 def preprocess_audio(webm_path: str) -> str:
@@ -148,15 +156,17 @@ def transcribe_audio():
         wav_tmp = preprocess_audio(webm_tmp)
 
         # 3. High-Accuracy Whisper transcription
-        result = stt_model.transcribe(
+        model = get_stt_model()
+
+        result = model.transcribe(
             wav_tmp,
-            language="en",              # Force English — prevents language confusion
+            language="en",
             task="transcribe",
-            initial_prompt=WHISPER_PROMPT,  # Indian English context primer
+            initial_prompt=WHISPER_PROMPT,
             condition_on_previous_text=True,
-            temperature=0,              # Greedy decoding — most consistent output
-            beam_size=5,                # Beam search → better than greedy alone
-            fp16=False,                 # Explicit FP32 for CPU machines
+            temperature=0,
+            beam_size=5,
+            fp16=False,
             no_speech_threshold=0.6,
             compression_ratio_threshold=2.4,
         )
